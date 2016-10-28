@@ -5,7 +5,8 @@
 
 [travis]: https://travis-ci.org/ashmaroli/jekyll-plus
 
-A ruby gem that modifies `jekyll new` command to add new switches: `--plus`, `--classic`, `--verbose`.
+A ruby gem that modifies `jekyll new` command to add new switches: `--plus`, `--classic`, `--verbose`.  
+*Note:* Posts created with this gem will still be a markdown document, but with a shorter `.md` extension. The gem will additionally initialize the generated site directory as a git repository.
 
 ## Installation
 
@@ -25,7 +26,7 @@ def init_with_program(prog)
     c.option "force", "--force", "Force creation even if PATH already exists"
     c.option "blank", "--blank", "Creates scaffolding but with empty files"
     c.option "skip-bundle", "--skip-bundle", "Skip 'bundle install'"
-+   c.option "plus", "--plus", "Plus features"
++   c.option "plus", "--plus", "Creates scaffolding with pre-configured entries"
 +   c.option "classic", "--classic", "Classic Jekyll scaffolding"
 +   c.option "verbose", "--verbose", "Output messages while creating"
 
@@ -44,8 +45,9 @@ This gem provides three new switches to be used along with the `jekyll new` comm
 
 ### `--plus`
 
-This switch creates a new Jekyll site using ERB templates for `_config.yml` and `Gemfile` and additionally initializes the directory as a git repository.  
+This switch creates a new Jekyll site using ERB templates for `_config.yml` and `Gemfile` which allows Ruby to create these files using information available to it. 
 The config file in such sites will be **pre-populated** with information from the argument(s) passed to `jekyll new` and from the user's `.gitconfig` file. If the git-user-details have not been configured, placeholder text will be used instead.
+The Gemfile will lock to a Ruby Version its generated in, by properly interpreting the RUBY_VERSION constant.  
 
 **Note:** `site.title` will be set with `capitalized` version of the project's directory-name.  
 This switch has no effect when used alongside the `--blank` switch.
