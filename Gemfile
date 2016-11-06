@@ -2,7 +2,6 @@ source 'https://rubygems.org'
 gemspec
 
 group :test do
-  gem "rake"  
   gem "rubocop", "~> 0.44.1"
   gem "minitest"
   gem "minitest-reporters"
