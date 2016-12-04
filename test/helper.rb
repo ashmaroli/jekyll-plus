@@ -11,7 +11,7 @@ require_relative "../lib/jekyll-plus.rb"
 Minitest::Reporters.use! [
   Minitest::Reporters::DefaultReporter.new(
     :color => true
-  )
+  ),
 ]
 
 module Minitest::Assertions

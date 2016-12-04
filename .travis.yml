@@ -14,10 +14,14 @@ matrix:
   include:
     - rvm: *ruby1
       env: TEST_SUITE=fmt
+  exclude:
+    - rvm: *jruby
+      env: TEST_SUITE=cucumber
 
 env:
   matrix:
     - TEST_SUITE=test
+    - TEST_SUITE=cucumber
 
 before_install:
   - gem update --system
