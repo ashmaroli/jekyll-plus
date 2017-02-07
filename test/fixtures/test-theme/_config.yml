@@ -1,0 +1,6 @@
+# Welcome to Jekyll!
+
+theme: test-theme
+exclude:
+  - Gemfile
+  - Gemfile.lock
