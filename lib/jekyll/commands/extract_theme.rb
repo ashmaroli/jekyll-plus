@@ -8,7 +8,7 @@ module Jekyll
 
           c.option "force", "--force", "Force extraction even if file already exists"
           c.option "list", "--list", "List the contents of the specified [DIR]"
-          c.option "quiet", "--quiet", "Supress logger output at level info and error"
+          c.option "lax", "--lax", "Continue extraction process if a file doesn't exist"
 
           c.action do |args, options|
             process(args, options)
@@ -19,12 +19,13 @@ module Jekyll
       def process(args, options = {})
         @force = options["force"]
         @list = options["list"]
-        @quiet = options["quiet"]
-        if args.empty? && !@quiet
+        @lax = options["lax"]
+
+        if args.empty?
           Jekyll.logger.abort_with("Error:",
             "You must specify a theme directory or a file path.")
         else
-          config = Jekyll.configuration(options)
+          config = Jekyll.configuration(Configuration.new)
           @source = config["source"]
           @theme_dir = Site.new(config).theme.root
 
@@ -50,7 +51,7 @@ module Jekyll
         if File.exist? file_path
           extract_to_source file_path
         else
-          unless @quiet
+          unless @lax
             Jekyll.logger.abort_with "Error:", "Specified file or directory doesn't exist"
           end
         end
@@ -121,9 +122,7 @@ module Jekyll
       end
 
       def print(topic, message = "")
-        unless @quiet
-          Jekyll.logger.info topic, message
-        end
+        Jekyll.logger.info topic, message
       end
     end
   end
