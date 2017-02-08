@@ -115,7 +115,7 @@ module Jekyll
             _layouts _includes _sass _data assets
           )
           Dir.chdir(path) do
-            Commands::ExtractTheme.process(scaffold_directories, "quiet" => true)
+            Commands::ExtractTheme.process(scaffold_directories, "--lax")
           end
           print_info "New classic-style jekyll site installed in #{path.cyan}."
         else
@@ -142,9 +142,7 @@ module Jekyll
       def extract_theme_config(path)
         Dir.chdir(path) do
           Commands::ExtractTheme.process(
-            %w(_config.yml),
-            "force" => true,
-            "quiet" => true
+            %w(_config.yml), "--force, --lax"
           )
         end
       end
