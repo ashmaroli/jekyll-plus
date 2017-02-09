@@ -9,6 +9,8 @@ module Jekyll
           c.option "force", "--force", "Force extraction even if file already exists"
           c.option "list", "--list", "List the contents of the specified [DIR]"
           c.option "lax", "--lax", "Continue extraction process if a file doesn't exist"
+          c.option "quiet", "--quiet", "Swallow info messages while extracting"
+          c.option "verbose", "--verbose", "Additional info messages while extracting"
 
           c.action do |args, options|
             process(args, options)
@@ -20,6 +22,8 @@ module Jekyll
         @force = options["force"]
         @list = options["list"]
         @lax = options["lax"]
+        @quiet = options["quiet"]
+        @verbose = options["verbose"]
 
         if args.empty?
           Jekyll.logger.abort_with("Error:",
@@ -31,6 +35,7 @@ module Jekyll
 
           print "Source Directory:", @source
           print "Theme Directory:", @theme_dir
+          vprint ""
 
           # Substitute leading special-characters in an argument with an
           # 'underscore' to disable extraction of files outside the theme-gem
@@ -122,7 +127,16 @@ module Jekyll
       end
 
       def print(topic, message = "")
-        Jekyll.logger.info topic, message
+        unless @quiet
+          Jekyll.logger.info topic, message
+        end
+      end
+
+      # only with --verbose switch
+      def vprint(topic, message = "")
+        if @verbose
+          Jekyll.logger.info topic, message
+        end
       end
     end
   end

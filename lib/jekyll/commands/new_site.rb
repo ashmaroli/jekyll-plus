@@ -11,7 +11,6 @@ module Jekyll
           c.option "classic", "--classic", "Classic Jekyll scaffolding"
           c.option "theme", "--theme GEM-NAME", "Scaffold with a custom gem-based theme"
           c.option "force", "--force", "Force creation even if PATH already exists"
-          c.option "skip-bundle", "--skip-bundle", "Skip 'bundle install'"
           c.option "verbose", "--verbose", "Output messages while creating"
 
           c.action do |args, options|
@@ -74,7 +73,16 @@ module Jekyll
       def create_site(path, options)
         create_default_site_at path
         add_supporting_files path
-        after_install path, options
+
+        if options["classic"]
+          bundle_unless_theme_installed path
+          extract_templates_and_config path
+        elsif options["theme"]
+          bundle_unless_theme_installed path
+          extract_theme_config path
+        end
+
+        success_message path, options
       end
 
       def create_default_site_at(path)
@@ -88,6 +96,19 @@ module Jekyll
         write_file(welcome_post, erb_render(scaffold_path, source), path)
       end
 
+      def extract_templates_and_config(path)
+        print_header(
+          "Extracting:",
+          "Templates and _config.yml from #{@theme.cyan} if available..",
+          "="
+        )
+        package = \
+          %w(
+            _layouts _includes _sass _data assets _config.yml
+          )
+        Dir.chdir(path) do
+          Commands::ExtractTheme.process(package, extraction_opts)
+        end
       def add_supporting_files(path)
         source = site_template
         process_template_for "Gemfile", source, path
@@ -95,35 +116,50 @@ module Jekyll
         print ""
       end
 
+      def extract_theme_config(path)
+        print_header(
+          "Extracting:",
+          "_config.yml from theme-gem if available..",
+          "="
+        )
+        Dir.chdir(path) do
+          Commands::ExtractTheme.process(%w(_config.yml), extraction_opts)
+        end
+      end
+
       def git_installed?
         process, _output = Utils::Exec.run("git", "--version")
         process.success?
       end
 
-      # After a new blog has been installed, print a success notification and then
-      # automatically execute bundle install from within the new blog dir unless
-      # the user opts to generate a classic Jekyll blog or skip 'bundle install'
-      # using the `--skip-bundle` switch
-      def after_install(path, options)
-        extract_theme_config path if options["theme"]
+      def extraction_opts
+        @verbose ? "--force --lax --verbose" : "--force --lax --quiet"
+      end
 
+      def success_message(path, options)
+        print_info ""
         if options["classic"]
-          print "Creating:", "Classic directories and files"
-          scaffold_directories = %w(
-            _layouts _includes _sass _data assets
-          )
-          Dir.chdir(path) do
-            Commands::ExtractTheme.process(scaffold_directories, "--lax")
-          end
-          print_info "New classic-style jekyll site installed in #{path.cyan}."
+          print_info "A classic-style jekyll site #{@title.cyan} installed " \
+                     " in #{path.cyan}."
+
+        elsif options["theme"]
+          print_info "New #{@theme.cyan} themed jekyll site #{@title.cyan} " \
+                     "installed in #{path.cyan}."
+
         else
           print_info "New jekyll site #{@title.cyan} installed in #{path.cyan}."
         end
+      end
 
-        print_info "Bundle install skipped." if options["skip-bundle"]
-        unless options["classic"] || options["skip-bundle"] || options["theme"]
-          bundle_install path
-        end
+      def bundle_unless_theme_installed(path)
+        print_info "Checking:", "Local theme installation..."
+        Gem::Specification.find_by_name(@theme)
+        theme_installed_msg
+        print_info ""
+      rescue Gem::LoadError
+        Jekyll.logger.error "Jekyll+:", "Theme #{@theme.inspect} could not be found."
+        bundle_install path
+        print_info ""
       end
 
       def bundle_install(path)
@@ -137,12 +173,9 @@ module Jekyll
         end
       end
 
-      def extract_theme_config(path)
-        Dir.chdir(path) do
-          Commands::ExtractTheme.process(
-            %w(_config.yml), "--force, --lax"
-          )
-        end
+      def theme_installed_msg
+        print_info "", "#{@theme.inspect} local installation found." \
+                       " Bundle install skipped".green
       end
 
       def process_template_for(file, source, destination)
@@ -204,6 +237,11 @@ module Jekyll
         if @verbose
           Jekyll.logger.info topic, message.to_s.cyan
         end
+      end
+
+      def print_header(topic, message, style = "-")
+        print_info topic, message
+        print "", style * message.length
       end
     end
   end
