@@ -126,11 +126,6 @@ module Jekyll
         end
       end
 
-      def git_installed?
-        process, _output = Utils::Exec.run("git", "--version")
-        process.success?
-      end
-
       def extraction_opts
         @verbose ? "--force --lax --verbose" : "--force --lax --quiet"
       end
@@ -200,16 +195,25 @@ module Jekyll
         "_posts/#{Time.now.strftime("%Y-%m-%d")}-welcome-to-jekyll.md"
       end
 
-      def existing_source_location?(path, options)
-        !options["force"] && !Dir["#{path}/**/*"].empty?
-      end
-
       def site_template
         File.expand_path("../site_template", File.dirname(__FILE__))
       end
 
       def scaffold_path
         "_posts/0000-00-00-welcome-to-jekyll.md.erb"
+      end
+
+      #
+
+      def existing_source_location?(path, options)
+        !options["force"] && !Dir["#{path}/**/*"].empty?
+      end
+
+      #
+
+      def git_installed?
+        process, _output = Utils::Exec.run("git", "--version")
+        process.success?
       end
 
       def initialize_git(path)
