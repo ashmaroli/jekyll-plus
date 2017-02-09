@@ -29,14 +29,12 @@ module Jekyll
           Jekyll.logger.abort_with "Conflict:", "#{site_path} exists and is not empty."
         end
 
+        initialize_git site_path if git_installed?
         create_variables_from(args, options)
 
         if options["theme"]
-          @theme = options["theme"]
           add_supporting_files site_path
           bundle_install site_path
-        else
-          @theme = "minima"
         end
 
         create_site site_path, options
@@ -61,7 +59,10 @@ module Jekyll
 
       def create_variables_from(args, options)
         @verbose = options["verbose"]
-        @classic = options["classic"]
+
+        @theme = options["theme"] ? options["theme"] : "minima"
+        @name  = user_name
+        @email = user_email
 
         # extract capitalized blog title from the argument(s) when a 'path'
         # to the new site has been provided.
@@ -77,9 +78,6 @@ module Jekyll
       end
 
       def create_default_site_at(path)
-        initialize_git path if git_installed?
-        @name  = user_name
-        @email = user_email
 
         FileUtils.mkdir_p(File.expand_path("_posts", path))
         source = site_template
