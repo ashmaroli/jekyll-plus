@@ -118,11 +118,11 @@ Feature: Extracting theme contents to source
     And I have a "_layouts/default.html" page that contains "test-layout"
     When I run jekyll+ extract-theme _layouts/default.html --force
     Then I should get a zero exit status
-    And I should see "Extract: /_layouts/default.html" in the build output
+    And I should see "Extracting: /_layouts/default.html" in the build output
     And I should see "default.html from test-theme:" in "_layouts/default.html"
 
   Scenario: Extracting with nothing specified
     Given I have a configuration file with "theme" set to "test-theme"
     When I run jekyll+ extract-theme
     Then I should get a non-zero exit status
-    And I should see "Error: You must specify a theme directory or a file path." in the build output
+    And I should see "You must specify a theme directory or a file path." in the build output
