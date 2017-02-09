@@ -9,9 +9,9 @@ module Jekyll
           c.description "Creates a custom Jekyll site scaffold in PATH"
 
           c.option "classic", "--classic", "Classic Jekyll scaffolding"
+          c.option "theme", "--theme GEM-NAME", "Scaffold with a custom gem-based theme"
           c.option "force", "--force", "Force creation even if PATH already exists"
           c.option "skip-bundle", "--skip-bundle", "Skip 'bundle install'"
-          c.option "theme", "--theme THEME", "Scaffold with a custom gem-based theme"
           c.option "verbose", "--verbose", "Output messages while creating"
 
           c.action do |args, options|
