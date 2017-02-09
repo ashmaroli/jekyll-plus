@@ -31,11 +31,6 @@ module Jekyll
         initialize_git site_path if git_installed?
         create_variables_from(args, options)
 
-        if options["theme"]
-          add_supporting_files site_path
-          bundle_install site_path
-        end
-
         create_site site_path, options
       end
 
@@ -71,8 +66,8 @@ module Jekyll
       end
 
       def create_site(path, options)
+        add_foundation_files path
         create_default_site_at path
-        add_supporting_files path
 
         if options["classic"]
           bundle_unless_theme_installed path
@@ -85,6 +80,12 @@ module Jekyll
         success_message path, options
       end
 
+      def add_foundation_files(path)
+        print_header "Creating:", "Foundation files"
+        process_template_for "Gemfile", site_template, path
+        process_template_for "_config.yml", site_template, path
+        print ""
+      end
       def create_default_site_at(path)
 
         FileUtils.mkdir_p(File.expand_path("_posts", path))
@@ -109,11 +110,6 @@ module Jekyll
         Dir.chdir(path) do
           Commands::ExtractTheme.process(package, extraction_opts)
         end
-      def add_supporting_files(path)
-        source = site_template
-        process_template_for "Gemfile", source, path
-        process_template_for "_config.yml", source, path
-        print ""
       end
 
       def extract_theme_config(path)
