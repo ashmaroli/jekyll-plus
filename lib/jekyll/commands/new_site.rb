@@ -129,12 +129,12 @@ module Jekyll
       end
 
       def bundle_install(path)
-        print_info "Running bundle install in #{path.cyan}..."
+        print_info "Jekyll+:", "Running bundle install in #{path.cyan}..."
         Dir.chdir(path) do
           process, output = Utils::Exec.run("bundle", "install")
-          output.to_s.each_line do |line|
-            print("Bundler:", line.strip) unless line.to_s.empty?
-          end
+          report = output.to_s.each_line.map(&:strip)
+          print_info "Bundler:", report.first
+          report[1..-1].each { |line| print_info "", line }
           raise SystemExit unless process.success?
         end
       end
