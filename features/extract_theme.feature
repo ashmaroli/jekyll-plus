@@ -89,14 +89,14 @@ Feature: Extracting theme contents to source
     Given I have a configuration file with "theme" set to "test-theme"
     When I run jekyll+ extract-theme _layouts/test.html
     Then I should get a non-zero exit status
-    And I should see "Error: Specified file or directory doesn't exist" in the build output
+    And I should see "ERROR: '_layouts/test.html' could not be found at the root of your theme-gem." in the build output
     And the "_layouts/test.html" file should not exist
 
   Scenario: Extracting a non-existent file under lax-mode
     Given I have a configuration file with "theme" set to "test-theme"
     When I run jekyll+ extract-theme _layouts/test.html --lax
     Then I should get a zero exit status
-    And I should not see "Error: Specified file or directory doesn't exist" in the build output
+    And I should see "'_layouts/test.html' could not be found at the root of your theme-gem. Proceeding anyways." in the build output
     And the "_layouts/test.html" file should not exist
 
   Scenario: Extracting a file that already exists at destination

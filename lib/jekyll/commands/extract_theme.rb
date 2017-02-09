@@ -56,8 +56,12 @@ module Jekyll
         if File.exist? file_path
           extract_to_source file_path
         else
-          unless @lax
-            Jekyll.logger.abort_with "Error:", "Specified file or directory doesn't exist"
+          error_msg = "'#{path}' could not be found at the root of your theme-gem."
+          if @lax
+            Jekyll.logger.warn "", "#{error_msg} Proceeding anyways."
+            vprint ""
+          else
+            Jekyll.logger.abort_with "ERROR:", error_msg
           end
         end
       end
