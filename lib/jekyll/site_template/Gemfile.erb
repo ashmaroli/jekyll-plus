@@ -12,7 +12,10 @@ ruby "<%= RUBY_VERSION %>"
 gem "jekyll", "~> <%= Jekyll::VERSION %>"
 
 # The theme-gem for your site.
-gem <%= @theme.inspect %><% if @theme == "minima" %>, "~> 2.0"<% elsif @theme == "test-theme" %>, path: File.expand_path("../../../test/fixtures/test-theme", File.dirname(__FILE__))<% end %>
+gem <%= @theme.inspect %><% if @theme == "minima" %>, "~> 2.0"
+<% elsif @theme == "test-theme" %>, path: File.expand_path("../../../test/fixtures/test-theme", File.dirname(__FILE__))
+<% end %>
+
 
 # If you want to use GitHub Pages, remove the "gem "jekyll"" above and
 # uncomment the line below. To upgrade, run `bundle update github-pages`.
@@ -20,5 +23,8 @@ gem <%= @theme.inspect %><% if @theme == "minima" %>, "~> 2.0"<% elsif @theme ==
 
 # If you have any plugins, put them here!
 group :jekyll_plugins do
-<% if @theme == "minima" %>  gem "jekyll-feed", "~> 0.8"<% else %>  gem "jekyll-plus"<% end %>
+<% if @theme == "minima" %>
+  gem "jekyll-feed", "~> 0.8"
+<% end %>
+  gem "jekyll-plus" # Required to use the jekyll+ executable to build / serve your site
 end

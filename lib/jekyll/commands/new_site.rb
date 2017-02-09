@@ -190,7 +190,9 @@ module Jekyll
       end
 
       def erb_render(filename, source)
-        ERB.new(File.read(File.expand_path(filename, source))).result(binding)
+        ERB.new(
+          File.read(File.expand_path(filename, source)), 0, "<>"
+        ).result(binding)
       end
 
       def welcome_post
