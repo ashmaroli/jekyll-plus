@@ -84,7 +84,7 @@ module Jekyll
         print_header "Creating:", "Foundation files"
         process_template_for "Gemfile", site_template, path
         process_template_for "_config.yml", site_template, path
-        print ""
+        verbose_print ""
       end
 
       def create_scaffold_at(path)
@@ -97,7 +97,7 @@ module Jekyll
           write_file(page, erb_render("#{page}.erb", site_template), path)
         end
         write_file(welcome_post, erb_render(scaffold_path, site_template), path)
-        print ""
+        verbose_print ""
       end
 
       def extract_templates_and_config(path)
@@ -172,8 +172,10 @@ module Jekyll
                        " Bundle install skipped".green
       end
 
+      #
+
       def process_template_for(file, source, destination)
-        print "Creating:", File.join(destination, file)
+        verbose_print "", File.join(destination, file)
         File.open(File.join(destination, file), "w") do |f|
           f.write(
             erb_render("#{file}.erb", source)
@@ -183,7 +185,7 @@ module Jekyll
 
       def write_file(filename, contents, path)
         full_path = File.expand_path(filename, path)
-        print "Creating:", full_path
+        verbose_print "", full_path
         File.write(full_path, contents)
       end
 
@@ -217,7 +219,7 @@ module Jekyll
       end
 
       def initialize_git(path)
-        print "Initialising:", File.join(path, ".git")
+        verbose_print "Initialising:", File.join(path, ".git")
         Dir.chdir(path) { `git init` }
       end
 
@@ -231,20 +233,22 @@ module Jekyll
         email.empty? ? "your-email@domain.com" : email
       end
 
+      #
+
       def print_info(topic, message = "")
         Jekyll.logger.info topic, message
       end
 
       # only with --verbose switch
-      def print(topic, message = "")
+      def verbose_print(topic, message = "")
         if @verbose
-          Jekyll.logger.info topic, message.to_s.cyan
+          Jekyll.logger.info topic, message
         end
       end
 
       def print_header(topic, message, style = "-")
         print_info topic, message
-        print "", style * message.length
+        verbose_print "", style * message.length
       end
     end
   end
