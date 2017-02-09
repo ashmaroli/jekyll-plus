@@ -22,15 +22,15 @@ Gem::Specification.new do |spec|
   end
 
   spec.files         = `git ls-files -z`.split("\x0").select do |f|
-    f.match(%r{^(lib/|(LICENSE|README)((\.(txt|md|markdown)|$)))}i)
+    f.match(%r{^((exe|lib)/|(LICENSE|README)((\.(txt|md|markdown)|$)))}i)
   end
   spec.bindir        = "exe"
-  spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
+  spec.executables   = "jekyll+"
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "jekyll", "~> 3.3"
+  spec.add_runtime_dependency "jekyll", "~> 3.4"
 
   spec.add_development_dependency "bundler", "~> 1.12"
   spec.add_development_dependency "rake", "~> 10.0"
-  spec.add_development_dependency "minitest", "~> 5.0"
+  spec.add_development_dependency "cucumber", "~> 2.1"
 end
