@@ -67,7 +67,7 @@ module Jekyll
 
       def create_site(path, options)
         add_foundation_files path
-        create_default_site_at path
+        create_scaffold_at path
 
         if options["classic"]
           bundle_unless_theme_installed path
@@ -86,15 +86,18 @@ module Jekyll
         process_template_for "_config.yml", site_template, path
         print ""
       end
-      def create_default_site_at(path)
 
+      def create_scaffold_at(path)
+        print_header "Creating:", "Scaffold files"
         FileUtils.mkdir_p(File.expand_path("_posts", path))
-        source = site_template
 
         pages = %w(index.html about.md)
         pages << ".gitignore"
-        pages.each { |page| write_file(page, erb_render("#{page}.erb", source), path) }
-        write_file(welcome_post, erb_render(scaffold_path, source), path)
+        pages.each do |page|
+          write_file(page, erb_render("#{page}.erb", site_template), path)
+        end
+        write_file(welcome_post, erb_render(scaffold_path, site_template), path)
+        print ""
       end
 
       def extract_templates_and_config(path)
