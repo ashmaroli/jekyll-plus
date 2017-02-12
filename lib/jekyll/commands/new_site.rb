@@ -14,14 +14,13 @@ module Jekyll
           c.option "verbose", "--verbose", "Output messages while creating"
 
           c.action do |args, options|
+            raise ArgumentError, "You must specify a path." if args.empty?
             process(args, options)
           end
         end
       end
 
       def process(args, options = {})
-        raise ArgumentError, "You must specify a path." if args.empty?
-
         site_path = File.expand_path(args.join(" "), Dir.pwd)
         FileUtils.mkdir_p site_path
         if existing_source_location?(site_path, options)
