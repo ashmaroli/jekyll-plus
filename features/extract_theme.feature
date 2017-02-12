@@ -29,7 +29,7 @@ Feature: Extracting theme contents to source
 
   Scenario: Extracting an entire directory
     Given I have a configuration file with "theme" set to "test-theme"
-    When I run jekyll+ extract-theme _layouts
+    When I run jekyll+ extract _layouts
     Then I should get a zero exit status
     And the _layouts directory should exist
     And the "_layouts/default.html" file should exist
@@ -54,7 +54,7 @@ Feature: Extracting theme contents to source
 
   Scenario: Extracting only a specific file
     Given I have a configuration file with "theme" set to "test-theme"
-    When I run jekyll+ extract-theme assets/img/logo.png
+    When I run jekyll+ extract assets/img/logo.png
     Then I should get a zero exit status
     And the assets directory should exist
     And the "assets/img/logo.png" file should exist

@@ -5,6 +5,7 @@ module Jekyll
         prog.command(:"extract-theme") do |c|
           c.syntax      "extract-theme [DIR (or) FILE-PATH] [options]"
           c.description "Extract files and directories from theme-gem to Source"
+          c.alias :extract
 
           c.option "force", "--force", "Force extraction even if file already exists"
           c.option "list", "--list", "List the contents of the specified [DIR]"
