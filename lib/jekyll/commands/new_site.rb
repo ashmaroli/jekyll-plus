@@ -9,35 +9,26 @@ module Jekyll
           c.description "Creates a custom Jekyll site scaffold in PATH"
 
           c.option "classic", "--classic", "Classic Jekyll scaffolding"
+          c.option "theme", "--theme GEM-NAME", "Scaffold with a custom gem-based theme"
           c.option "force", "--force", "Force creation even if PATH already exists"
-          c.option "skip-bundle", "--skip-bundle", "Skip 'bundle install'"
-          c.option "theme", "--theme THEME", "Scaffold with a custom gem-based theme"
           c.option "verbose", "--verbose", "Output messages while creating"
 
           c.action do |args, options|
+            raise ArgumentError, "You must specify a path." if args.empty?
             process(args, options)
           end
         end
       end
 
       def process(args, options = {})
-        raise ArgumentError, "You must specify a path." if args.empty?
-
         site_path = File.expand_path(args.join(" "), Dir.pwd)
         FileUtils.mkdir_p site_path
         if existing_source_location?(site_path, options)
           Jekyll.logger.abort_with "Conflict:", "#{site_path} exists and is not empty."
         end
 
+        initialize_git site_path if git_installed?
         create_variables_from(args, options)
-
-        if options["theme"]
-          @theme = options["theme"]
-          add_supporting_files site_path
-          bundle_install site_path
-        else
-          @theme = "minima"
-        end
 
         create_site site_path, options
       end
@@ -61,7 +52,10 @@ module Jekyll
 
       def create_variables_from(args, options)
         @verbose = options["verbose"]
-        @classic = options["classic"]
+
+        @theme = options["theme"] ? options["theme"] : "minima"
+        @name  = user_name
+        @email = user_email
 
         # extract capitalized blog title from the argument(s) when a 'path'
         # to the new site has been provided.
@@ -71,84 +65,116 @@ module Jekyll
       end
 
       def create_site(path, options)
-        create_default_site_at path
-        add_supporting_files path
-        after_install path, options
+        add_foundation_files path
+        create_scaffold_at path
+
+        if options["classic"]
+          bundle_unless_theme_installed path
+          extract_templates_and_config path
+        elsif options["theme"]
+          bundle_unless_theme_installed path
+          extract_theme_config path
+        end
+
+        success_message path, options
       end
 
-      def create_default_site_at(path)
-        initialize_git path if git_installed?
-        @name  = user_name
-        @email = user_email
+      def add_foundation_files(path)
+        print_header "Creating:", "Foundation files"
+        process_template_for "Gemfile", site_template, path
+        process_template_for "_config.yml", site_template, path
+        verbose_print ""
+      end
 
+      def create_scaffold_at(path)
+        print_header "Creating:", "Scaffold files"
         FileUtils.mkdir_p(File.expand_path("_posts", path))
-        source = site_template
 
         pages = %w(index.html about.md)
         pages << ".gitignore"
-        pages.each { |page| write_file(page, erb_render("#{page}.erb", source), path) }
-        write_file(welcome_post, erb_render(scaffold_path, source), path)
+        pages.each do |page|
+          write_file(page, erb_render("#{page}.erb", site_template), path)
+        end
+        write_file(welcome_post, erb_render(scaffold_path, site_template), path)
+        verbose_print ""
       end
 
-      def add_supporting_files(path)
-        source = site_template
-        process_template_for "Gemfile", source, path
-        process_template_for "_config.yml", source, path
-        print ""
-      end
-
-      def git_installed?
-        process, _output = Utils::Exec.run("git", "--version")
-        process.success?
-      end
-
-      # After a new blog has been installed, print a success notification and then
-      # automatically execute bundle install from within the new blog dir unless
-      # the user opts to generate a classic Jekyll blog or skip 'bundle install'
-      # using the `--skip-bundle` switch
-      def after_install(path, options)
-        extract_theme_config path if options["theme"]
-
-        if options["classic"]
-          print "Creating:", "Classic directories and files"
-          scaffold_directories = %w(
-            _layouts _includes _sass _data assets
+      def extract_templates_and_config(path)
+        print_header(
+          "Extracting:",
+          "Templates and _config.yml from #{@theme.cyan} if available..",
+          "="
+        )
+        package = \
+          %w(
+            _layouts _includes _sass _data assets _config.yml
           )
-          Dir.chdir(path) do
-            Commands::ExtractTheme.process(scaffold_directories, "--lax")
-          end
-          print_info "New classic-style jekyll site installed in #{path.cyan}."
-        else
-          print_info "New jekyll site #{@title.cyan} installed in #{path.cyan}."
-        end
-
-        print_info "Bundle install skipped." if options["skip-bundle"]
-        unless options["classic"] || options["skip-bundle"] || options["theme"]
-          bundle_install path
-        end
-      end
-
-      def bundle_install(path)
-        print_info "Running bundle install in #{path.cyan}..."
         Dir.chdir(path) do
-          process, output = Utils::Exec.run("bundle", "install")
-          output.to_s.each_line do |line|
-            print("Bundler:", line.strip) unless line.to_s.empty?
-          end
-          raise SystemExit unless process.success?
+          Commands::ExtractTheme.process(package, extraction_opts)
         end
       end
 
       def extract_theme_config(path)
+        print_header(
+          "Extracting:",
+          "_config.yml from theme-gem if available..",
+          "="
+        )
         Dir.chdir(path) do
-          Commands::ExtractTheme.process(
-            %w(_config.yml), "--force, --lax"
-          )
+          Commands::ExtractTheme.process(%w(_config.yml), extraction_opts)
         end
       end
 
+      def extraction_opts
+        @verbose ? "--force --lax --verbose" : "--force --lax --quiet"
+      end
+
+      def success_message(path, options)
+        print_info ""
+        if options["classic"]
+          print_info "A classic-style jekyll site #{@title.cyan} installed " \
+                     " in #{path.cyan}."
+
+        elsif options["theme"]
+          print_info "New #{@theme.cyan} themed jekyll site #{@title.cyan} " \
+                     "installed in #{path.cyan}."
+
+        else
+          print_info "New jekyll site #{@title.cyan} installed in #{path.cyan}."
+        end
+      end
+
+      def bundle_unless_theme_installed(path)
+        print_info "Checking:", "Local theme installation..."
+        Gem::Specification.find_by_name(@theme)
+        theme_installed_msg
+        print_info ""
+      rescue Gem::LoadError
+        Jekyll.logger.error "Jekyll+:", "Theme #{@theme.inspect} could not be found."
+        bundle_install path
+        print_info ""
+      end
+
+      def bundle_install(path)
+        print_info "Jekyll+:", "Running bundle install in #{path.cyan}..."
+        Dir.chdir(path) do
+          process, output = Utils::Exec.run("bundle", "install")
+          report = output.to_s.each_line.map(&:strip)
+          print_info "Bundler:", report.first
+          report[1..-1].each { |line| print_info "", line }
+          raise SystemExit unless process.success?
+        end
+      end
+
+      def theme_installed_msg
+        print_info "", "#{@theme.inspect} local installation found." \
+                       " Bundle install skipped".green
+      end
+
+      #
+
       def process_template_for(file, source, destination)
-        print "Creating:", File.join(destination, file)
+        verbose_print "", File.join(destination, file)
         File.open(File.join(destination, file), "w") do |f|
           f.write(
             erb_render("#{file}.erb", source)
@@ -158,20 +184,18 @@ module Jekyll
 
       def write_file(filename, contents, path)
         full_path = File.expand_path(filename, path)
-        print "Creating:", full_path
+        verbose_print "", full_path
         File.write(full_path, contents)
       end
 
       def erb_render(filename, source)
-        ERB.new(File.read(File.expand_path(filename, source))).result(binding)
+        ERB.new(
+          File.read(File.expand_path(filename, source)), 0, "<>"
+        ).result(binding)
       end
 
       def welcome_post
         "_posts/#{Time.now.strftime("%Y-%m-%d")}-welcome-to-jekyll.md"
-      end
-
-      def existing_source_location?(path, options)
-        !options["force"] && !Dir["#{path}/**/*"].empty?
       end
 
       def site_template
@@ -182,8 +206,21 @@ module Jekyll
         "_posts/0000-00-00-welcome-to-jekyll.md.erb"
       end
 
+      #
+
+      def existing_source_location?(path, options)
+        !options["force"] && !Dir["#{path}/**/*"].empty?
+      end
+
+      #
+
+      def git_installed?
+        process, _output = Utils::Exec.run("git", "--version")
+        process.success?
+      end
+
       def initialize_git(path)
-        print "Initialising:", File.join(path, ".git")
+        verbose_print "Initialising:", File.join(path, ".git")
         Dir.chdir(path) { `git init` }
       end
 
@@ -197,15 +234,22 @@ module Jekyll
         email.empty? ? "your-email@domain.com" : email
       end
 
+      #
+
       def print_info(topic, message = "")
         Jekyll.logger.info topic, message
       end
 
       # only with --verbose switch
-      def print(topic, message = "")
+      def verbose_print(topic, message = "")
         if @verbose
-          Jekyll.logger.info topic, message.to_s.cyan
+          Jekyll.logger.info topic, message
         end
+      end
+
+      def print_header(topic, message, style = "-")
+        print_info topic, message
+        verbose_print "", style * message.length
       end
     end
   end

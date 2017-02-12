@@ -29,7 +29,7 @@ Feature: Extracting theme contents to source
 
   Scenario: Extracting an entire directory
     Given I have a configuration file with "theme" set to "test-theme"
-    When I run jekyll+ extract-theme _layouts
+    When I run jekyll+ extract _layouts
     Then I should get a zero exit status
     And the _layouts directory should exist
     And the "_layouts/default.html" file should exist
@@ -54,7 +54,7 @@ Feature: Extracting theme contents to source
 
   Scenario: Extracting only a specific file
     Given I have a configuration file with "theme" set to "test-theme"
-    When I run jekyll+ extract-theme assets/img/logo.png
+    When I run jekyll+ extract assets/img/logo.png
     Then I should get a zero exit status
     And the assets directory should exist
     And the "assets/img/logo.png" file should exist
@@ -89,14 +89,14 @@ Feature: Extracting theme contents to source
     Given I have a configuration file with "theme" set to "test-theme"
     When I run jekyll+ extract-theme _layouts/test.html
     Then I should get a non-zero exit status
-    And I should see "Error: Specified file or directory doesn't exist" in the build output
+    And I should see "ERROR: '_layouts/test.html' could not be found at the root of your theme-gem." in the build output
     And the "_layouts/test.html" file should not exist
 
   Scenario: Extracting a non-existent file under lax-mode
     Given I have a configuration file with "theme" set to "test-theme"
     When I run jekyll+ extract-theme _layouts/test.html --lax
     Then I should get a zero exit status
-    And I should not see "Error: Specified file or directory doesn't exist" in the build output
+    And I should see "'_layouts/test.html' could not be found at the root of your theme-gem. Proceeding anyways." in the build output
     And the "_layouts/test.html" file should not exist
 
   Scenario: Extracting a file that already exists at destination
@@ -118,11 +118,11 @@ Feature: Extracting theme contents to source
     And I have a "_layouts/default.html" page that contains "test-layout"
     When I run jekyll+ extract-theme _layouts/default.html --force
     Then I should get a zero exit status
-    And I should see "Extract: /_layouts/default.html" in the build output
+    And I should see "Extracting: /_layouts/default.html" in the build output
     And I should see "default.html from test-theme:" in "_layouts/default.html"
 
   Scenario: Extracting with nothing specified
     Given I have a configuration file with "theme" set to "test-theme"
     When I run jekyll+ extract-theme
     Then I should get a non-zero exit status
-    And I should see "Error: You must specify a theme directory or a file path." in the build output
+    And I should see "You must specify a theme directory or a file path." in the build output
