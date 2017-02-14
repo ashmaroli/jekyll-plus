@@ -1,0 +1,14 @@
+en:
+  greeting: "Hello There, Welcome!"
+  prev: previous
+  next: next
+
+  long_strings:
+    - THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG
+    - THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG DOZING UNDER THE CANOPY
+
+fr:
+  greeting: "Bonjour, Bienvenue!"
+  prev: précédent
+  next: prochain
+
