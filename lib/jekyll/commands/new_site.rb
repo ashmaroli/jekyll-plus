@@ -105,12 +105,11 @@ module Jekyll
           "Templates and _config.yml from #{@theme.cyan} if available..",
           "="
         )
-        package = \
-          %w(
-            _layouts _includes _sass _data assets _config.yml
-          )
+        package = %w(_layouts _includes _sass _data assets _config.yml)
+        package << extraction_opts
+
         Dir.chdir(path) do
-          Commands::ExtractTheme.process(package, extraction_opts)
+          bundle_extract package
         end
       end
 
@@ -120,9 +119,16 @@ module Jekyll
           "_config.yml from theme-gem if available..",
           "="
         )
+        package = %w(_config.yml)
+        package << extraction_opts
+
         Dir.chdir(path) do
-          Commands::ExtractTheme.process(%w(_config.yml), extraction_opts)
+          bundle_extract package
         end
+      end
+
+      def bundle_extract(package)
+        system("bundle", "exec", "jekyll+ extract #{package.join(" ")}")
       end
 
       def extraction_opts

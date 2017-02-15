@@ -85,6 +85,12 @@ end
 
 #
 
+Given(%r!^I have moved into the "(.*)" directory$!) do |dir|
+  Dir.chdir(dir)
+end
+
+#
+
 When(%r!^I run jekyll\+(.*)$!) do |args|
   run_jekyll(args)
   if args.include?("--verbose") || ENV["DEBUG"]
