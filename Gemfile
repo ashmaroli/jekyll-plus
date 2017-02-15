@@ -2,7 +2,6 @@ source 'https://rubygems.org'
 gemspec
 
 group :test do
-  gem "rake"  
   gem "rubocop", "~> 0.47"
   gem "cucumber", "~> 2.1"
   gem "rspec"
