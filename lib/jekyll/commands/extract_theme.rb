@@ -3,7 +3,7 @@ module Jekyll
     class << self
       def init_with_program(prog)
         prog.command(:"extract-theme") do |c|
-          c.syntax      "extract-theme [DIR (or) FILE-PATH] [options]"
+          c.syntax      "extract-theme [DIR (or) FILE-PATH]"
           c.description "Extract files and directories from theme-gem to Source"
           c.alias :extract
 
