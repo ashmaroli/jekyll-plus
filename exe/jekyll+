@@ -12,14 +12,15 @@ Jekyll::Deprecator.process(ARGV)
 
 Mercenary.program(:"jekyll+") do |p|
   p.version JekyllPlus::VERSION
-  p.description "JekyllPlus simply extends Jekyll with additional features"
+  p.description "JekyllPlus is a tool that simplifies the installation and usage" \
+                " of a Jekyll Site linked to a gem-based Jekyll Theme."
   p.syntax "jekyll+ <subcommand> [options]"
 
   p.option "source", "-s", "--source [DIR]", "Source directory (defaults to ./)"
   p.option "destination", "-d", "--destination [DIR]",
     "Destination directory (defaults to ./_site)"
   p.option "safe", "--safe", "Safe mode (defaults to false)"
-  p.option "plugins_dir", "-p", "--plugins PLUGINS_DIR1[,PLUGINS_DIR2[,...]]", Array,
+  p.option "plugins_dir", "-p", "--plugins DIR1[,DIR2[,...]]", Array,
     "Plugins directory (defaults to ./_plugins)"
   p.option "layouts_dir", "--layouts DIR", String,
     "Layouts directory (defaults to ./_layouts)"
