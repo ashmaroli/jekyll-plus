@@ -138,12 +138,10 @@ module Jekyll
       def success_message(path, options)
         print_info ""
         if options["classic"]
-          print_info "A classic-style jekyll site #{@title.cyan} installed " \
-                     " in #{path.cyan}."
+          print_info "A classic-style jekyll site installed in #{path.cyan}."
 
         elsif options["theme"]
-          print_info "New #{@theme.cyan} themed jekyll site #{@title.cyan} " \
-                     "installed in #{path.cyan}."
+          print_info "New #{@theme.cyan} themed jekyll site installed in #{path.cyan}."
 
         else
           print_info "New jekyll site #{@title.cyan} installed in #{path.cyan}."
