@@ -10,6 +10,7 @@ module Jekyll
           c.option "force", "--force", "Force extraction even if file already exists"
           c.option "list", "--list", "List the contents of the specified [DIR]"
           c.option "lax", "--lax", "Continue extraction process if a file doesn't exist"
+          c.option "root", "--root", "Extract sub-directory contents directly to Source"
           c.option "quiet", "--quiet", "Swallow info messages while extracting"
           c.option "verbose", "--verbose", "Additional info messages while extracting"
 
@@ -66,12 +67,35 @@ module Jekyll
       def extract_to_source(path, options)
         if File.directory?(path) && options["list"]
           list_contents path
+        elsif File.directory?(path) && options["root"] && !options["force"]
+          Jekyll.logger.warn "Attention:", "Using --root with directories will " \
+          "extract contents recursively and override corresponding file paths " \
+          "relative to your source directory. Please run the command again with " \
+          "--force to confirm."
+        elsif File.directory?(path) && options["root"] && options["force"]
+          Dir["#{path}/**/*"].each do |entry|
+            unless File.directory?(entry)
+              if File.exist?(File.join(@source, dir_content(path, entry)))
+                Jekyll.logger.warn "Overriding:", dir_content(path, entry)
+              else
+                print "Extracting:", dir_content(path, entry)
+              end
+            end
+          end
+          FileUtils.cp_r "#{path}/.", @source
         elsif File.directory? path
           dir_path = File.expand_path(path.split("/").last, @source)
           extract_directory dir_path, path, options
         elsif !File.directory?(path) && options["list"]
           Jekyll.logger.warn "Error:", relative_path(path)
           Jekyll.logger.warn "", "The --list switch only works for directories"
+        elsif !File.directory?(path) && options["root"]
+          file_path = File.join(@source, File.basename(path))
+          if File.exist?(file_path) && !options["force"]
+            already_exists_msg File.basename(path)
+          else
+            FileUtils.cp path, @source
+          end
         else
           dir_path = File.dirname(File.join(@source, relative_path(path)))
           extract_file_with_directory dir_path, path, options
@@ -120,6 +144,10 @@ module Jekyll
 
       def relative_path(file)
         file.sub(@theme_dir, "")
+      end
+
+      def dir_content(dir, file)
+        relative_path(file).sub("#{relative_path(dir)}/", "")
       end
 
       def dir_content_path(dir, file)

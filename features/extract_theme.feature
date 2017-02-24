@@ -52,6 +52,26 @@ Feature: Extracting theme contents to source
     And the "assets/style.scss" file should exist
     And the "assets/img/logo.png" file should exist
 
+  Scenario: Extracting contents of sub-directories directly to site's source without --force
+    Given I have a configuration file with "theme" set to "test-theme"
+    When I run jekyll+ extract-theme assets _data/locales.yml --root
+    Then I should get a zero exit status
+    And the assets directory should not exist
+    And the _data directory should not exist
+    And the "style.scss" file should not exist
+    And the "img/logo.png" file should not exist
+    But the "locales.yml" file should exist
+
+  Scenario: Extracting contents of sub-directories directly to site's source with --force
+    Given I have a configuration file with "theme" set to "test-theme"
+    When I run jekyll+ extract-theme assets _data/locales.yml --root --force
+    Then I should get a zero exit status
+    And the assets directory should not exist
+    And the _data directory should not exist
+    But the "style.scss" file should exist
+    And the "img/logo.png" file should exist
+    And the "locales.yml" file should exist
+
   Scenario: Extracting only a specific file
     Given I have a configuration file with "theme" set to "test-theme"
     When I run jekyll+ extract assets/img/logo.png
