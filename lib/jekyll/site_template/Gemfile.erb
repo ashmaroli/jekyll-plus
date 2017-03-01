@@ -18,5 +18,8 @@ group :jekyll_plugins do
 <% if @theme == "minima" %>
   gem "jekyll-feed", "~> 0.8"
 <% end %>
-  gem "jekyll-plus" # Required to use the jekyll+ executable to build / serve your site
+
+  # Required to use the jekyll+ executable to build / serve your site.
+  # Also includes the `jekyll-data` plugin. So you needn't include it again separately.
+  gem "jekyll-plus", "~> 0.2"
 end
