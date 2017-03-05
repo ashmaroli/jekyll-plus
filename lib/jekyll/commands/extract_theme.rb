@@ -10,6 +10,7 @@ module Jekyll
           c.option "force", "--force", "Force extraction even if file already exists"
           c.option "list", "--list", "List the contents of the specified [DIR]"
           c.option "lax", "--lax", "Continue extraction process if a file doesn't exist"
+          c.option "root", "--root", "Extract sub-directory contents directly to Source"
           c.option "quiet", "--quiet", "Swallow info messages while extracting"
           c.option "verbose", "--verbose", "Additional info messages while extracting"
 
@@ -64,14 +65,34 @@ module Jekyll
       end
 
       def extract_to_source(path, options)
-        if File.directory?(path) && options["list"]
+        if File.directory?(path)
+          process_options_and_extract_directory path, options
+        else
+          process_options_and_extract_file path, options
+        end
+      end
+
+      def process_options_and_extract_directory(path, options)
+        if options["list"]
           list_contents path
-        elsif File.directory? path
+        elsif options["root"]
+          extract_dir_contents_to_root path, options
+        else
           dir_path = File.expand_path(path.split("/").last, @source)
           extract_directory dir_path, path, options
-        elsif !File.directory?(path) && options["list"]
+        end
+      end
+
+      def process_options_and_extract_file(path, options)
+        if options["list"]
           Jekyll.logger.warn "Error:", relative_path(path)
           Jekyll.logger.warn "", "The --list switch only works for directories"
+        elsif options["root"]
+          file_path = File.join(@source, File.basename(path))
+          extract_unless_exists(file_path, File.basename(path), options) do
+            print "Extracting:", relative_path(path)
+            FileUtils.cp path, @source
+          end
         else
           dir_path = File.dirname(File.join(@source, relative_path(path)))
           extract_file_with_directory dir_path, path, options
@@ -89,9 +110,7 @@ module Jekyll
       end
 
       def extract_directory(dir_path, path, options)
-        if File.exist?(dir_path) && !options["force"]
-          already_exists_msg path
-        else
+        extract_unless_exists(dir_path, path, options) do
           FileUtils.cp_r path, @source
           directory = "#{relative_path(path).sub("/", "")} directory"
           print "Extracting:", directory
@@ -106,11 +125,37 @@ module Jekyll
       def extract_file_with_directory(dir_path, file_path, options)
         FileUtils.mkdir_p dir_path unless File.directory? dir_path
         file = file_path.split("/").last
-        if File.exist?(File.join(dir_path, file)) && !options["force"]
-          already_exists_msg file
-        else
+        extract_unless_exists(File.join(dir_path, file), file, options) do
           FileUtils.cp_r file_path, dir_path
           extraction_msg file_path
+        end
+      end
+
+      def extract_dir_contents_to_root(path, options)
+        if !options["force"]
+          Jekyll.logger.warn "Attention:", "Using --root with directories will " \
+          "extract contents recursively and override corresponding file paths " \
+          "relative to your source directory. Please run the command again with " \
+          "an additional --force to confirm."
+        elsif options["force"]
+          Dir["#{path}/**/*"].each do |entry|
+            unless File.directory?(entry)
+              if File.exist?(File.join(@source, dir_content(path, entry)))
+                Jekyll.logger.warn "Overriding:", dir_content(path, entry)
+              else
+                print "Extracting:", dir_content(path, entry)
+              end
+            end
+          end
+          FileUtils.cp_r "#{path}/.", @source
+        end
+      end
+
+      def extract_unless_exists(path, file, options)
+        if File.exist?(path) && !options["force"]
+          already_exists_msg file
+        else
+          yield
         end
       end
 
@@ -120,6 +165,10 @@ module Jekyll
 
       def relative_path(file)
         file.sub(@theme_dir, "")
+      end
+
+      def dir_content(dir, file)
+        relative_path(file).sub("#{relative_path(dir)}/", "")
       end
 
       def dir_content_path(dir, file)
