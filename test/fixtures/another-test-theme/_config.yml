@@ -1,0 +1,11 @@
+# Welcome to Jekyll!
+
+scaffold_dir: example
+theme: another-test-theme
+locale: fr
+
+# test with some real-world plugins
+gems:
+  - jemoji
+  - jekyll-mentions
+  - jekyll-paginate
