@@ -193,9 +193,9 @@ module Jekyll
         end
       end
 
-      def write_file(filename, contents, path)
+      def write_file(filename, contents, path, topic = "")
         full_path = File.expand_path(filename, path)
-        verbose_print "", full_path
+        verbose_print topic, full_path
         File.write(full_path, contents)
       end
 
