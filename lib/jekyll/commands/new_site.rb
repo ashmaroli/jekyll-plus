@@ -95,15 +95,20 @@ module Jekyll
 
       def create_scaffold_at(path)
         print_header "Creating:", "Scaffold files"
-        FileUtils.mkdir_p(File.expand_path("_posts", path))
 
         pages = %w(index.html about.md)
         pages << ".gitignore"
         pages.each do |page|
           write_file(page, erb_render("#{page}.erb", site_template), path)
         end
-        write_file(welcome_post, erb_render(scaffold_path, site_template), path)
+      end
+
+      def install_welcome_post_at(path)
         verbose_print ""
+        FileUtils.mkdir_p(File.expand_path("_posts", path))
+        write_file(
+          welcome_post, erb_render(post_template, site_template), path, "Welcome Post:"
+        )
       end
 
       def extract_templates_and_config(path)
@@ -209,12 +214,12 @@ module Jekyll
         "_posts/#{Time.now.strftime("%Y-%m-%d")}-welcome-to-jekyll.md"
       end
 
-      def site_template
-        File.expand_path("../site_template", File.dirname(__FILE__))
+      def post_template
+        "_posts/0000-00-00-welcome-to-jekyll.md.erb"
       end
 
-      def scaffold_path
-        "_posts/0000-00-00-welcome-to-jekyll.md.erb"
+      def site_template
+        File.expand_path("../site_template", File.dirname(__FILE__))
       end
 
       #
