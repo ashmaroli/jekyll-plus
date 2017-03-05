@@ -27,12 +27,16 @@ module Jekyll
         @quiet = options["quiet"]
         @verbose = options["verbose"]
 
-        config = Jekyll.configuration(Configuration.new)
+        config = if @quiet
+                   get_configuration_from "_config.yml"
+                 else
+                   Jekyll.configuration(Configuration.new)
+                 end
         @source = config["source"]
         @theme_dir = Site.new(config).theme.root
 
-        print "Source Directory:", @source
-        print "Theme Directory:", @theme_dir
+        verbose_print "Source Directory:", @source
+        verbose_print "Theme Directory:", @theme_dir
         verbose_print ""
 
         # Substitute leading special-characters in an argument with an
@@ -44,7 +48,7 @@ module Jekyll
         args.map { |i| i.sub(%r!\A\W!, "_") }.each do |arg|
           initiate_extraction arg, options
         end
-        Jekyll.logger.info "", "..done"
+        verbose_print "", "..done"
       end
 
       private
@@ -148,6 +152,15 @@ module Jekyll
             end
           end
           FileUtils.cp_r "#{path}/.", @source
+        end
+      end
+
+      def get_configuration_from(file)
+        yaml_data = SafeYAML.load_file(file)
+        if yaml_data.is_a? Hash
+          Configuration.from yaml_data
+        else
+          Jekyll.logger.abort_with "FATAL:", "Could not extract hash from #{file}"
         end
       end
 
