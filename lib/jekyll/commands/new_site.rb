@@ -66,7 +66,6 @@ module Jekyll
 
       def create_site(path, options)
         add_foundation_files path
-        create_scaffold_at path
 
         if options["classic"]
           bundle_unless_theme_installed path
@@ -76,6 +75,7 @@ module Jekyll
           extract_theme_config path
         end
 
+        install_scaffold_at path
         success_message path, options
       end
 
@@ -90,6 +90,36 @@ module Jekyll
         Dir.chdir(path) do
           data = SafeYAML.load_file("_config.yml")
           @config = data if data.is_a? Hash
+        end
+      end
+
+      def install_scaffold_at(path)
+        install_welcome_post_at path
+        verbose_print ""
+
+        read_config path
+        @scaffold_path ||= @config["scaffold_dir"]
+
+        if @scaffold_path && File.exist?(in_theme_dir(@scaffold_path))
+          extract_scaffold_to path
+        else
+          create_scaffold_at path
+        end
+      end
+
+      def extract_scaffold_to(path)
+        verbose_print ""
+        print_header(
+          "Extracting:",
+          "Scaffold from theme gem..",
+          "="
+        )
+        package = [@scaffold_path]
+        package << extraction_opts
+        package << "--root"
+
+        Dir.chdir(path) do
+          bundle_extract package
         end
       end
 
@@ -164,7 +194,7 @@ module Jekyll
         print_info "Checking:", "Local theme installation..."
         Gem::Specification.find_by_name(@theme)
         theme_installed_msg
-        print_info ""
+        verbose_print ""
       rescue Gem::LoadError
         Jekyll.logger.error "Jekyll+:", "Theme #{@theme.inspect} could not be found."
         bundle_install path
@@ -226,6 +256,14 @@ module Jekyll
 
       def existing_source_location?(path, options)
         !options["force"] && !Dir["#{path}/**/*"].empty?
+      end
+
+      def in_theme_dir(*paths)
+        theme = Jekyll::Theme.new(@config["theme"]) if @config["theme"].is_a? String
+        return nil unless theme
+        paths.reduce(theme.root) do |base, path|
+          Jekyll.sanitized_path(base, path)
+        end
       end
 
       #
