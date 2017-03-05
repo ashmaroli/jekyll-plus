@@ -86,6 +86,13 @@ module Jekyll
         verbose_print ""
       end
 
+      def read_config(path)
+        Dir.chdir(path) do
+          data = SafeYAML.load_file("_config.yml")
+          @config = data if data.is_a? Hash
+        end
+      end
+
       def create_scaffold_at(path)
         print_header "Creating:", "Scaffold files"
         FileUtils.mkdir_p(File.expand_path("_posts", path))
