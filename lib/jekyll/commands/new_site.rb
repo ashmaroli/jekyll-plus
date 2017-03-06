@@ -66,7 +66,6 @@ module Jekyll
 
       def create_site(path, options)
         add_foundation_files path
-        create_scaffold_at path
 
         if options["classic"]
           bundle_unless_theme_installed path
@@ -76,6 +75,7 @@ module Jekyll
           extract_theme_config path
         end
 
+        install_scaffold_at path
         success_message path, options
       end
 
@@ -86,17 +86,59 @@ module Jekyll
         verbose_print ""
       end
 
+      def read_config(path)
+        Dir.chdir(path) do
+          data = SafeYAML.load_file("_config.yml")
+          @config = data if data.is_a? Hash
+        end
+      end
+
+      def install_scaffold_at(path)
+        install_welcome_post_at path
+        verbose_print ""
+
+        read_config path
+        @scaffold_path ||= @config["scaffold_dir"]
+
+        if @scaffold_path && File.exist?(in_theme_dir(@scaffold_path))
+          extract_scaffold_to path
+        else
+          create_scaffold_at path
+        end
+      end
+
+      def extract_scaffold_to(path)
+        verbose_print ""
+        print_header(
+          "Extracting:",
+          "Scaffold from theme gem..",
+          "="
+        )
+        package = [@scaffold_path]
+        package << extraction_opts
+        package << "--root"
+
+        Dir.chdir(path) do
+          bundle_extract package
+        end
+      end
+
       def create_scaffold_at(path)
         print_header "Creating:", "Scaffold files"
-        FileUtils.mkdir_p(File.expand_path("_posts", path))
 
         pages = %w(index.html about.md)
         pages << ".gitignore"
         pages.each do |page|
           write_file(page, erb_render("#{page}.erb", site_template), path)
         end
-        write_file(welcome_post, erb_render(scaffold_path, site_template), path)
+      end
+
+      def install_welcome_post_at(path)
         verbose_print ""
+        FileUtils.mkdir_p(File.expand_path("_posts", path))
+        write_file(
+          welcome_post, erb_render(post_template, site_template), path, "Welcome Post:"
+        )
       end
 
       def extract_templates_and_config(path)
@@ -152,7 +194,7 @@ module Jekyll
         print_info "Checking:", "Local theme installation..."
         Gem::Specification.find_by_name(@theme)
         theme_installed_msg
-        print_info ""
+        verbose_print ""
       rescue Gem::LoadError
         Jekyll.logger.error "Jekyll+:", "Theme #{@theme.inspect} could not be found."
         bundle_install path
@@ -186,9 +228,9 @@ module Jekyll
         end
       end
 
-      def write_file(filename, contents, path)
+      def write_file(filename, contents, path, topic = "")
         full_path = File.expand_path(filename, path)
-        verbose_print "", full_path
+        verbose_print topic, full_path
         File.write(full_path, contents)
       end
 
@@ -202,18 +244,26 @@ module Jekyll
         "_posts/#{Time.now.strftime("%Y-%m-%d")}-welcome-to-jekyll.md"
       end
 
-      def site_template
-        File.expand_path("../site_template", File.dirname(__FILE__))
+      def post_template
+        "_posts/0000-00-00-welcome-to-jekyll.md.erb"
       end
 
-      def scaffold_path
-        "_posts/0000-00-00-welcome-to-jekyll.md.erb"
+      def site_template
+        File.expand_path("../site_template", File.dirname(__FILE__))
       end
 
       #
 
       def existing_source_location?(path, options)
         !options["force"] && !Dir["#{path}/**/*"].empty?
+      end
+
+      def in_theme_dir(*paths)
+        theme = Jekyll::Theme.new(@config["theme"]) if @config["theme"].is_a? String
+        return nil unless theme
+        paths.reduce(theme.root) do |base, path|
+          Jekyll.sanitized_path(base, path)
+        end
       end
 
       #

@@ -6,4 +6,5 @@ group :test do
   gem "rspec"
   gem "activesupport", "~> 4.2" if RUBY_VERSION < '2.2.2'
   gem "test-theme", path: File.expand_path("./test/fixtures/test-theme", File.dirname(__FILE__))
+  gem "another-test-theme", path: File.expand_path("./test/fixtures/another-test-theme", File.dirname(__FILE__))
 end

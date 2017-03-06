@@ -1,0 +1,3 @@
+---
+---
+@import "another-test-theme-{{ site.theme-color | default: 'red' }}";

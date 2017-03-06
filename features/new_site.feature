@@ -50,6 +50,18 @@ Feature: Generate a new Jekyll Site
     And I should see "gem \"test-theme\"" in "test-site/Gemfile"
     And I should see "theme: test-theme" in "test-site/_config.yml"
 
+  Scenario: Generating a site with a custom-theme from custom scaffold directory
+    Given I do not have a "test-site" directory
+    When I run jekyll+ new-site test-site --theme another-test-theme
+    Then I should get a zero exit status
+    And the test-site/_posts directory should exist
+    But the "test-site/about.md" file should not exist
+    And the "test-site/index.html" file should not exist
+    But the "test-site/about-us.md" file should exist
+    And the "test-site/index.md" file should exist
+    And I should see "gem \"another-test-theme\"" in "test-site/Gemfile"
+    And I should see "theme: another-test-theme" in "test-site/_config.yml"
+
   Scenario: Generating a legacy-style site with a custom-theme
     Given I do not have a "test-site" directory
     When I run jekyll+ new-site test-site --classic --theme test-theme
